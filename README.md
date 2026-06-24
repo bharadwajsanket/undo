@@ -1,137 +1,138 @@
+<div align="center">
+
 # Undo
 
-> Bring Ctrl+Z to terminal file deletions.
+**Recover files you just deleted with `rm`.**
 
-Undo is a lightweight, daemonless command-line utility written in C17 that intercepts the standard `rm` command, backs up deleted files locally, and enables instant restoration. It provides a simple, dependency-free recovery mechanism for Unix terminals without background services or bloated databases.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-v0.1.0-informational.svg)](#)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)](#)
+[![Language](https://img.shields.io/badge/language-C17-orange.svg)](#)
 
----
+</div>
 
-## Quick Start
-
-### 1. Installation
-Install Undo using `curl` directly from the repository:
-```bash
-curl -sSL https://raw.githubusercontent.com/bharadwajsanket/undo/main/install.sh | bash
-```
-*Alternatively, you can compile from source by running `make` and copying the binary to your system PATH.*
-
-### 2. Test Deletion
-Once installed, delete any test file:
 ```bash
 rm thesis.pdf
-```
-*Output:*
-```
-Stored in Undo
-ID: a81f92
-```
-
-### 3. Restore Instantly
-To revert the deletion and restore the file to its original path:
-```bash
 undo
 ```
-*Output:*
+
 ```
 Restored thesis.pdf
 ```
+
+Undo sits in front of `rm`, keeps a local backup of what you delete, and lets you bring it back with one command. No daemon, no database, no setup.
+
+---
+
+### Contents
+
+- [Install](#install)
+- [Usage](#usage)
+- [Screenshots](#screenshots)
+- [Why trust it](#why-trust-it)
+- [Limitations](#limitations)
+- [Configuration](#configuration)
+- [How it works](#how-it-works)
+- [License](#license)
+
+---
+
+## Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/bharadwajsanket/undo/main/install.sh | bash
+```
+
+Or build from source:
+
+```bash
+make
+```
+
+then copy the resulting binary into your `PATH`.
+
+---
+
+## Usage
+
+Delete a file, then restore it:
+
+```bash
+rm thesis.pdf
+undo
+```
+
+| Command | Description |
+|---|---|
+| `undo` | Restore the most recent deletion |
+| `undo <id>` | Restore a specific deletion by ID |
+| `undo history` | List recent deletions |
+| `undo stats` | Show storage usage and compression ratio |
+| `undo clean` | Clear all stored backups |
+| `undo config` | Open interactive configuration |
+
+> Works with `rm -r` and symbolic links.
 
 ---
 
 ## Screenshots
 
-### Intercept Deletion
-![File Deletion](assets/screenshots/delete-file.png)
-
-### Undo Restore
-![File Restoration](assets/screenshots/restore-file.png)
-
-### Check Deletion Log
-![History Output](assets/screenshots/history.png)
-
-### Storage Efficiency
-![Storage Statistics](assets/screenshots/stats.png)
+| | |
+|---|---|
+| **Deleting a file**<br>![File Deletion](assets/screenshots/delete-file.png) | **Restoring it**<br>![File Restoration](assets/screenshots/restore-file.png) |
+| **Viewing history**<br>![History Output](assets/screenshots/history.png) | **Checking storage stats**<br>![Storage Statistics](assets/screenshots/stats.png) |
 
 ---
 
-## Features
+## Why trust it
 
-- **Write-Ahead Logging**: Uses a transactional log system (`~/.undo/journal.log`) to guarantee reliability. Data states are fully committed to disk before original files are removed.
-- **Crash Rollback**: Startup processes scan the journal to roll back any pending (partially completed) transaction resulting from shell interruptions or power failures.
-- **Auto-Compression**: Regular files are automatically deflated on-the-fly using `zlib` when beneficial to optimize disk storage.
-- **Overwrite Safeguard**: Prioritizes data safety. Restoration halts immediately if a file already exists at the target path.
-- **Zero Daemon Overhead**: Operates purely on command execution and exits immediately. No persistent memory or background CPU footprint.
-- **Symbolic Link & Recursion Support**: Supports recursive directory deletions (`rm -r`) and symbolic links.
+| | |
+|---|---|
+| **Local only** | No network code, no telemetry. Everything stays in `~/.undo`, mode `0700`. |
+| **Write-ahead logging** | Deletions are committed to a journal before the original file is removed, so a crash or power loss mid-delete can't leave things half-done. |
+| **Safe restores** | Undo refuses to overwrite an existing file at the restore path. |
+| **Permissions preserved** | Restored files keep their original mode. |
 
----
-
-## Usage Examples
-
-### Restore a Specific Deletion
-```bash
-undo a81f92
-```
-
-### Display History Log
-```bash
-undo history
-```
-
-### Show Storage Usage
-Shows compression ratios, transaction counts, and configuration settings:
-```bash
-undo stats
-```
-
-### Configure Interactively
-```bash
-undo config
-```
-
-### Purge History
-```bash
-undo clean
-```
-
----
-
-## Storage & Configuration
-
-Undo stores transaction files and settings locally under `~/.undo/`:
-- `config`: Settings file containing threshold preferences.
-- `journal.log`: Log file mapping transaction lifecycle states.
-- `objects/`: Houses deleted objects organized under their respective transaction IDs.
-
-Customize settings in `~/.undo/config`:
-```ini
-# Prompt user before storing files larger than this threshold (in bytes)
-large_file_threshold = 104857600
-
-# Compression mode: auto, on, off
-compression = auto
-
-# Compress files larger than this threshold (in bytes)
-compression_threshold = 1048576
-```
+> Need a permanent delete that bypasses Undo entirely?
+> ```bash
+> \rm file.txt
+> # or
+> /bin/rm file.txt
+> ```
 
 ---
 
 ## Limitations
 
-- **rm Only**: Only intercepts files/folders deleted via standard `rm` calls. Low-level driver calls or deletions through other CLI tools (`find -delete`, `rmdir`) are not tracked.
-- **Disk Availability**: Backup objects are written to the home folder storage partition. Deletions will fail safely if the home partition runs out of disk space.
-- **Bypass**: To delete files permanently without backup, prefix the command with a backslash (`\rm file.txt`) or call the system binary directly (`/bin/rm file.txt`).
+- Only catches deletions made through `rm`. Tools like `find -delete` or `rmdir` aren't intercepted.
+- Backups are stored on the same partition as your home directory. If that partition fills up, deletions fail safely rather than silently dropping data.
 
 ---
 
-## Security Philosophy
+## Configuration
 
-1. **User Isolation**: The `~/.undo` storage directory is initialized with permission mode `0700` (readable/writable only by the owner).
-2. **Permissions Preservation**: File ownership permissions (modes) are preserved in the transaction records and applied back to restored files on recovery.
-3. **Local and Private**: Undo operates offline and has no networking code. No telemetry or telemetry logs are ever created or transmitted.
+Settings live in `~/.undo/config`:
+
+```ini
+large_file_threshold = 104857600   # prompt before storing files larger than this (bytes)
+compression = auto                 # auto, on, off
+compression_threshold = 1048576    # compress files larger than this (bytes)
+```
+
+---
+
+## How it works
+
+Undo intercepts `rm`, writes the target file(s) into `~/.undo/objects/`, and records the transaction in `~/.undo/journal.log` before removal happens. Files above a configurable size are compressed with `zlib`. On startup, Undo scans the journal for incomplete transactions and rolls them back.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).
+
+<div align="center">
+
+[Report an issue](https://github.com/bharadwajsanket/undo/issues) · [Back to top](#undo)
+
+</div>
