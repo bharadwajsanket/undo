@@ -77,10 +77,21 @@ undo
 
 ## Screenshots
 
-| | |
-|---|---|
-| **Deleting a file**<br>![File Deletion](assets/screenshots/delete-file.png) | **Restoring it**<br>![File Restoration](assets/screenshots/restore-file.png) |
-| **Viewing history**<br>![History Output](assets/screenshots/history.png) | **Checking storage stats**<br>![Storage Statistics](assets/screenshots/stats.png) |
+**Deleting a file**
+
+![File Deletion](assets/screenshots/delete-file.png)
+
+**Restoring it**
+
+![File Restoration](assets/screenshots/restore-file.png)
+
+**Viewing history**
+
+![History Output](assets/screenshots/history.png)
+
+**Checking storage stats**
+
+![Storage Statistics](assets/screenshots/stats.png)
 
 ---
 
