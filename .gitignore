@@ -1,0 +1,28 @@
+# Object files and libraries
+*.o
+*.out
+*.a
+*.so
+*.dylib
+
+# Compiled binary
+undo
+
+# Build & Release directories
+build/
+dist/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test outputs and workspaces
+stress_workspace/
+sandbox_test/
